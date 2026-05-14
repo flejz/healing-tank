@@ -17,6 +17,14 @@ use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 const I2C_FREQ_HZ: u32 = 400_000;
 const LOOP_MS: u32 = 100;
 
+const GLITCH_MSGS: &[&str] = &[
+    "##ERR:0xDEAD####",
+    ">>>CORRUPTION<<<",
+    "!!SIGNAL_LOST!!!",
+    "??REALIGN_BIO???",
+    "###GLITCH_MEM###",
+];
+
 const STATUS_MSGS: &[&str] = &[
     "NEURAL SYNC OK  ",
     "CELL REGEN ACTV ",
@@ -27,6 +35,10 @@ const STATUS_MSGS: &[&str] = &[
     "STASIS LOCKED   ",
     "VITALS NOMINAL  ",
 ];
+
+fn prng(seed: u32) -> u32 {
+    seed.wrapping_mul(1_664_525).wrapping_add(1_013_904_223)
+}
 
 fn main() -> Result<()> {
     esp_idf_svc::sys::link_patches();
@@ -120,6 +132,40 @@ fn main() -> Result<()> {
         Text::new("O2:100%  TEMP:36.6C", Point::new(0, 53), on)
             .draw(&mut display)
             .unwrap();
+
+        // ── Glitch overlay ──────────────────────────────────────────────
+        let glitch_phase = tick % 83;
+        if glitch_phase < 3 {
+            let mut rng = prng(tick ^ 0xCAFE_BABE);
+
+            // 2-3 random white scanline strips
+            let strip_count = 2 + (glitch_phase as usize);
+            for _ in 0..strip_count {
+                rng = prng(rng);
+                let y = (rng >> 16) as i32 % 64;
+                rng = prng(rng);
+                let h = 1 + ((rng >> 24) % 3) as u32;
+                Rectangle::new(Point::new(0, y), Size::new(128, h))
+                    .into_styled(fill_on)
+                    .draw(&mut display)
+                    .unwrap();
+            }
+
+            // Corrupt status row on frame 1
+            if glitch_phase == 1 {
+                Rectangle::new(Point::new(0, 33), Size::new(128, 11))
+                    .into_styled(PrimitiveStyle::with_fill(BinaryColor::Off))
+                    .draw(&mut display)
+                    .unwrap();
+                rng = prng(rng);
+                let gmsg = GLITCH_MSGS[(rng as usize) % GLITCH_MSGS.len()];
+                rng = prng(rng);
+                let x_off = (rng % 8) as i32;
+                Text::new(gmsg, Point::new(x_off, 42), on)
+                    .draw(&mut display)
+                    .unwrap();
+            }
+        }
 
         display.flush().unwrap();
 
