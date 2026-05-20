@@ -71,6 +71,19 @@ espflash monitor --port /dev/ttyUSB0
 
 ---
 
+## Configuration
+
+WiFi credentials are not committed. Create `src/config.rs` before building:
+
+```rust
+pub const WIFI_SSID: &str = "your-network-name";
+pub const WIFI_PASS: &str = "your-password";
+```
+
+This file is gitignored.
+
+---
+
 ## Stack
 
 - **Rust** with `esp` toolchain (xtensa-esp32-espidf target)
