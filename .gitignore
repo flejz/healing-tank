@@ -13,3 +13,7 @@
 
 # Local env
 .env
+
+# AI tooling
+docs/
+src/config.rs
