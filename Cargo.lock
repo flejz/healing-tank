@@ -832,6 +832,8 @@ dependencies = [
  "esp-idf-svc",
  "libm",
  "log",
+ "serde",
+ "serde_json",
  "ssd1306",
 ]
 
