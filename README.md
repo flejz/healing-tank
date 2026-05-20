@@ -1,25 +1,32 @@
 # Healing Tank
 
-ESP32 firmware driving a 128×64 SSD1306 OLED as a cyberpunk biohealing tank terminal display — a prop controller for a sci-fi chamber build.
+ESP32 firmware for a cyberpunk biohealing tank prop. Drives a 128×64 SSD1306 OLED display and a WS2812B LED strip, with a WiFi-hosted web UI for live control.
 
 ---
 
 ## What it looks like
 
+**OLED display (6 rows, 100ms tick loop)**
+
 ```
-╔══════════════════════╗
-║ = BIO-TANK MK.VII =  ║  ← inverted header
-║ SUBJ:ONLINE 00:04:23 ║  ← session timer counting up
-║ RGN [========░░] 78% ║  ← animated regen progress bar
-║ >>CELL REGEN ACTV << ║  ← blinking status, cycles 8 msgs
-║ O2:100%  TEMP:36.6C  ║  ← vitals
-╚══════════════════════╝
+╔════════════════════════╗
+║ = BIO-TANK MK.VII =    ║  ← inverted header bar
+║ SUBJ:ONLINE  00:04:23  ║  ← subject status + session timer (counts up)
+║ RGN [========░░]  78%  ║  ← animated regen bar (0→100%, ~81s cycle)
+║ CELL REGEN ACTV ///    ║  ← scrolling marquee, cycles 8 status messages
+║ O2:100%  TEMP:36.6C    ║  ← static vitals
+║ WIFI: 192.168.1.42     ║  ← WiFi status (connecting / IP / failed)
+╚════════════════════════╝
 ```
 
-- Session timer counts up from boot
-- Regen bar fills 0→100% over ~81 seconds, then resets
-- Status line cycles through 8 messages with blinking `>>` `<<` brackets
-- Runs at 100ms tick loop on FreeRTOS
+Occasional glitch overlay flickers random scanlines and corrupts the ticker row with hex error messages — synced with the LED glitch mode.
+
+**Web UI** — served from the ESP32 at its IP (port 80):
+
+- LED mode buttons: SOLID / BREATHING / GLITCH / RAINBOW / OFF
+- Brightness slider (0–255)
+- Color picker with 7 cyberpunk presets (red, cyan, green, purple, orange, pink, white)
+- Custom OLED status message (overrides scrolling marquee while set)
 
 ---
 
@@ -27,11 +34,11 @@ ESP32 firmware driving a 128×64 SSD1306 OLED as a cyberpunk biohealing tank ter
 
 | Part | Details |
 |------|---------|
-| MCU | ESP32 (any variant with I2C + RMT) |
+| MCU | ESP32 (WROOM-32 or any variant with I2C + RMT) |
 | Display | SSD1306 OLED 128×64, I2C |
 | SDA | GPIO 21 |
 | SCL | GPIO 22 |
-| I2C address | `0x3C` |
+| I2C speed | 400 kHz |
 | LED strip | WS2812B, 22 LEDs |
 | LED data | GPIO 2 (RMT) |
 
@@ -69,7 +76,7 @@ ESP32 firmware driving a 128×64 SSD1306 OLED as a cyberpunk biohealing tank ter
 
   GPIO2 ──[300–470 Ω]──────── DIN (strip)
 
-  Future – pump (MOSFET, parts TBD)
+  Future – water pump (MOSFET, parts TBD)
   5V ──── pump ──── MOSFET drain
                     MOSFET source ──── GND
                     MOSFET gate ── 330 Ω ── GPIO (free)
@@ -93,24 +100,21 @@ cargo install espflash ldproxy
 sudo usermod -aG uucp $USER
 ```
 
-**Build**
+**Makefile targets**
 
 ```bash
-source ~/export-esp.sh   # sets PATH + LIBCLANG_PATH for xtensa toolchain
-cargo build --release
+make build          # cross-compile release binary
+make flash          # build + flash to /dev/ttyUSB0
+make monitor        # open serial monitor (115200 baud)
+make flash-monitor  # flash then immediately monitor
+make check          # cargo check (fast type/borrow check)
+make clean          # cargo clean
+
+# Override port
+make flash PORT=/dev/ttyACM0
 ```
 
-**Flash**
-
-```bash
-espflash flash target/xtensa-esp32-espidf/release/healing-tank-screen --port /dev/ttyUSB0
-```
-
-**Monitor**
-
-```bash
-espflash monitor --port /dev/ttyUSB0
-```
+The Makefile handles sourcing `~/export-esp.sh` and setting `LD_LIBRARY_PATH` for NixOS automatically.
 
 ---
 
@@ -123,16 +127,39 @@ pub const WIFI_SSID: &str = "your-network-name";
 pub const WIFI_PASS: &str = "your-password";
 ```
 
-This file is gitignored.
+This file is gitignored. The device announces itself as `healing-tank` via DHCP hostname — many routers expose this as `healing-tank.local`.
+
+---
+
+## REST API
+
+All endpoints served on port 80.
+
+| Method | Path | Body | Description |
+|--------|------|------|-------------|
+| `GET` | `/` | — | Web UI (HTML) |
+| `GET` | `/api/state` | — | Full state as JSON |
+| `POST` | `/api/mode` | `{"mode":"solid"\|"breathing"\|"glitch"\|"rainbow"\|"off"}` | Set LED mode |
+| `POST` | `/api/brightness` | `{"value":0-255}` | Set brightness |
+| `POST` | `/api/color` | `{"r":0-255,"g":0-255,"b":0-255}` | Set LED color |
+| `POST` | `/api/message` | `{"text":"..."}` | Set OLED status message (empty = resume marquee) |
+
+Example:
+
+```bash
+curl -X POST http://192.168.1.42/api/mode -H 'Content-Type: application/json' -d '{"mode":"rainbow"}'
+curl -X POST http://192.168.1.42/api/color -H 'Content-Type: application/json' -d '{"r":0,"g":255,"b":65}'
+```
 
 ---
 
 ## Stack
 
-- **Rust** with `esp` toolchain (xtensa-esp32-espidf target)
-- [`esp-idf-svc`](https://github.com/esp-rs/esp-idf-svc) / [`esp-idf-hal`](https://github.com/esp-rs/esp-idf-hal) — ESP-IDF HAL
+- **Rust** with `esp` toolchain (`xtensa-esp32-espidf` target)
+- [`esp-idf-svc`](https://github.com/esp-rs/esp-idf-svc) / [`esp-idf-hal`](https://github.com/esp-rs/esp-idf-hal) — ESP-IDF HAL (WiFi, HTTP server, I2C, RMT)
 - [`ssd1306`](https://github.com/jamwaffles/ssd1306) — display driver
 - [`embedded-graphics`](https://github.com/embedded-graphics/embedded-graphics) — 2D drawing primitives
+- [`serde_json`](https://github.com/serde-rs/json) — JSON for REST API
 
 ---
 
