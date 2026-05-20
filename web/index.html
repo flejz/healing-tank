@@ -124,6 +124,7 @@
   <div class="row">
     <label>LED MODE</label>
     <div class="btn-group">
+      <button id="btn-solid"     class="mode-solid"     onclick="setMode('solid')">SOLID</button>
       <button id="btn-breathing" class="mode-breathing" onclick="setMode('breathing')">BREATHING</button>
       <button id="btn-glitch"    class="mode-glitch"    onclick="setMode('glitch')">GLITCH</button>
       <button id="btn-rainbow"   class="mode-rainbow"   onclick="setMode('rainbow')">RAINBOW</button>
@@ -188,7 +189,7 @@ function setStatus(msg) {
 }
 
 function setMode(m) {
-  ['breathing','glitch','rainbow','off'].forEach(id => {
+  ['solid','breathing','glitch','rainbow','off'].forEach(id => {
     document.getElementById('btn-'+id).classList.toggle('active', id === m);
   });
   post('/api/mode', { mode: m });

@@ -57,6 +57,7 @@ pub fn start_server(state: SharedState) -> anyhow::Result<EspHttpServer<'static>
         let buf = body_bytes(&mut req);
         if let Ok(body) = serde_json::from_slice::<ModeBody>(&buf) {
             let mode = match body.mode.as_str() {
+                "solid" => Some(LedMode::Solid),
                 "breathing" => Some(LedMode::Breathing),
                 "glitch" => Some(LedMode::Glitch),
                 "rainbow" => Some(LedMode::Rainbow),
@@ -119,6 +120,7 @@ fn body_bytes(req: &mut esp_idf_svc::http::server::Request<&mut EspHttpConnectio
 
 fn state_json(s: &AppState) -> String {
     let mode = match s.mode {
+        LedMode::Solid => "solid",
         LedMode::Breathing => "breathing",
         LedMode::Glitch => "glitch",
         LedMode::Rainbow => "rainbow",

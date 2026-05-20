@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 
 #[derive(Clone, PartialEq)]
 pub enum LedMode {
+    Solid,
     Breathing,
     Glitch,
     Rainbow,
@@ -25,7 +26,7 @@ pub struct AppState {
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            mode: LedMode::Breathing,
+            mode: LedMode::Solid,
             brightness: 255,
             color: (255, 0, 0),
             custom_message: None,

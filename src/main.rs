@@ -269,6 +269,14 @@ fn main() -> Result<()> {
         let mut pixels = [0u8; LED_COUNT * 3];
         match led_mode {
             LedMode::Off => {}
+            LedMode::Solid => {
+                let v = brightness as u16;
+                for i in 0..LED_COUNT {
+                    pixels[i * 3] = (v * color.1 as u16 / 255) as u8; // G
+                    pixels[i * 3 + 1] = (v * color.0 as u16 / 255) as u8; // R
+                    pixels[i * 3 + 2] = (v * color.2 as u16 / 255) as u8; // B
+                }
+            }
             LedMode::Glitch => {
                 let mut rng = prng(tick ^ 0xBEEF_FADE);
                 for i in 0..LED_COUNT {
