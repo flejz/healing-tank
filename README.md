@@ -27,11 +27,54 @@ ESP32 firmware driving a 128×64 SSD1306 OLED as a cyberpunk biohealing tank ter
 
 | Part | Details |
 |------|---------|
-| MCU | ESP32 (any variant with I2C) |
+| MCU | ESP32 (any variant with I2C + RMT) |
 | Display | SSD1306 OLED 128×64, I2C |
 | SDA | GPIO 21 |
 | SCL | GPIO 22 |
 | I2C address | `0x3C` |
+| LED strip | WS2812B, 22 LEDs |
+| LED data | GPIO 2 (RMT) |
+
+---
+
+## Wiring
+
+```
+                    ESP32 DevKit
+                  ┌─────────────┐
+            3V3 ──┤ 3V3     VIN ├── 5V (USB)
+            GND ──┤ GND     GND ├── GND
+                  │             │
+          GPIO2 ──┤ IO2         │
+         GPIO21 ──┤ IO21        │
+         GPIO22 ──┤ IO22        │
+                  └─────────────┘
+
+  SSD1306 OLED (I2C, 400 kHz)
+  ┌──────────────┐
+  │ VCC ─────────┼──── 3V3
+  │ GND ─────────┼──── GND
+  │ SDA ─────────┼──── GPIO21
+  │ SCL ─────────┼──── GPIO22
+  └──────────────┘
+  Note: most modules have built-in pull-ups.
+  If not: 4.7 kΩ from SDA → 3V3 and SCL → 3V3.
+
+  WS2812B Strip (22 LEDs, GRB, RMT)
+
+  5V ───────────────────┬──── VCC (strip)
+                      [100–1000 µF]   ← across power rails,
+                        │              close to strip
+  GND ──────────────────┴──── GND (strip)
+
+  GPIO2 ──[300–470 Ω]──────── DIN (strip)
+
+  Future – pump (MOSFET, parts TBD)
+  5V ──── pump ──── MOSFET drain
+                    MOSFET source ──── GND
+                    MOSFET gate ── 330 Ω ── GPIO (free)
+                    1N4007 flyback diode across pump terminals
+```
 
 ---
 
