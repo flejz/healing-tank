@@ -2,6 +2,11 @@ use anyhow::Result;
 use esp_idf_hal::delay::FreeRtos;
 use esp_idf_hal::i2c::{I2cConfig, I2cDriver};
 use esp_idf_hal::peripherals::Peripherals;
+use esp_idf_hal::rmt::{
+    config::{TransmitConfig, TxChannelConfig},
+    encoder::{BytesEncoder, BytesEncoderConfig},
+    PinState, Pulse, PulseTicks, Symbol, TxChannelDriver,
+};
 use esp_idf_hal::units::FromValueType;
 use esp_idf_svc::log::EspLogger;
 
@@ -16,6 +21,7 @@ use ssd1306::{prelude::*, I2CDisplayInterface, Ssd1306};
 
 const I2C_FREQ_HZ: u32 = 400_000;
 const LOOP_MS: u32 = 100;
+const LED_COUNT: usize = 22;
 
 const GLITCH_MSGS: &[&str] = &[
     "##ERR:0xDEAD####",
@@ -52,6 +58,30 @@ fn main() -> Result<()> {
         &I2cConfig::new().baudrate(I2C_FREQ_HZ.Hz()),
     )?;
 
+    // WS2812B at 10 MHz (100 ns/tick): bit0 = 400 ns high + 800 ns low, bit1 = 800 ns high + 400 ns low
+    let bit0 = Symbol::new(
+        Pulse::new(PinState::High, PulseTicks::new(4).unwrap()),
+        Pulse::new(PinState::Low, PulseTicks::new(8).unwrap()),
+    );
+    let bit1 = Symbol::new(
+        Pulse::new(PinState::High, PulseTicks::new(8).unwrap()),
+        Pulse::new(PinState::Low, PulseTicks::new(4).unwrap()),
+    );
+    let mut encoder = BytesEncoder::with_config(&BytesEncoderConfig {
+        bit0,
+        bit1,
+        msb_first: true,
+        ..Default::default()
+    })?;
+    let mut rmt_tx = TxChannelDriver::new(
+        peripherals.pins.gpio2,
+        &TxChannelConfig {
+            resolution: 10_000_000u32.Hz(),
+            ..Default::default()
+        },
+    )?;
+    let transmit_cfg = TransmitConfig::default();
+
     let interface = I2CDisplayInterface::new(i2c_driver);
     let mut display = Ssd1306::new(interface, DisplaySize128x64, DisplayRotation::Rotate0)
         .into_buffered_graphics_mode();
@@ -67,6 +97,8 @@ fn main() -> Result<()> {
     let mut ms_acc: u32 = 0;
 
     loop {
+        let glitch_phase = tick % 83;
+
         display.clear(BinaryColor::Off).unwrap();
 
         // ── Row 1: inverted header ──────────────────────────────────────
@@ -134,7 +166,6 @@ fn main() -> Result<()> {
             .unwrap();
 
         // ── Glitch overlay ──────────────────────────────────────────────
-        let glitch_phase = tick % 83;
         if glitch_phase < 3 {
             let mut rng = prng(tick ^ 0xCAFE_BABE);
 
@@ -168,6 +199,27 @@ fn main() -> Result<()> {
         }
 
         display.flush().unwrap();
+
+        // ── LED update ──────────────────────────────────────────────────
+        let mut pixels = [0u8; LED_COUNT * 3]; // GRB format: G=0, R=brightness, B=0
+        if glitch_phase < 3 {
+            let mut rng = prng(tick ^ 0xBEEF_FADE);
+            for i in 0..LED_COUNT {
+                rng = prng(rng);
+                pixels[i * 3 + 1] = (rng >> 24) as u8; // R
+            }
+        } else {
+            // sine-based breathing: full period = 60 ticks, range 20-255
+            let phase = (tick % 60) as f32;
+            let t = phase / 60.0;
+            let sine = libm::sinf(t * core::f32::consts::TAU); // -1.0..1.0
+            let brightness = (137.5 + 117.5 * sine) as u8; // 20..255
+            for i in 0..LED_COUNT {
+                pixels[i * 3 + 1] = brightness; // R
+            }
+        }
+        unsafe { rmt_tx.start_send(&mut encoder, &pixels, &transmit_cfg).unwrap() };
+        rmt_tx.wait_all_done(None).unwrap();
 
         FreeRtos::delay_ms(LOOP_MS);
         tick += 1;
