@@ -4,6 +4,7 @@ use esp_idf_svc::wifi::{AuthMethod, ClientConfiguration, Configuration};
 use esp_idf_hal::modem::Modem;
 use esp_idf_svc::{
     eventloop::EspSystemEventLoop,
+    handle::RawHandle,
     nvs::EspDefaultNvsPartition,
     wifi::{BlockingWifi, EspWifi},
 };
@@ -60,6 +61,10 @@ fn connect(
     wifi.start()?;
     wifi.connect()?;
     wifi.wait_netif_up()?;
+
+    // Set DHCP hostname so the device announces itself as "healing-tank" on the network
+    let hostname = c"healing-tank";
+    unsafe { esp_idf_svc::sys::esp_netif_set_hostname(wifi.wifi().sta_netif().handle(), hostname.as_ptr()) };
 
     let ip = wifi.wifi().sta_netif().get_ip_info()?.ip.to_string();
     Ok((ip, wifi))
