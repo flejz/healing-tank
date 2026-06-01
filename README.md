@@ -94,7 +94,7 @@ Bread-boarded first, then soldered onto a protoboard and wired through the front
     <td align="center"><img src="hardware/protoboard.gif" width="200" alt="Breadboard prototype"><br><sub>Breadboard prototype</sub></td>
     <td align="center"><img src="hardware/wiring.jpeg" width="200" alt="Wiring the base"><br><sub>Wiring the base</sub></td>
     <td align="center"><img src="hardware/wiring-panel-only.jpeg" width="200" alt="Front-panel harness"><br><sub>Front-panel harness</sub></td>
-    <td align="center"><img src="hardware/poor-soldering-job.jpeg" width="200" alt="Protoboard solder job"><br><sub>Protoboard (first solder job)</sub></td>
+    <td align="center"><img src="hardware/poor-soldering-job.jpeg" width="200" alt="Protoboard solder job"><br><sub>Protoboard (mediocre solder job)</sub></td>
   </tr>
 </table>
 
