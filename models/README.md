@@ -17,3 +17,13 @@
 - Orientation, supports and material are up to you — no print profiles are committed.
 - Verify the model scale in your slicer first (see the scale note above).
 - The vent grille on `tank-top.stl` has thin features; a 0.4 mm nozzle handles them, but check your slicer's preview.
+
+## Finishing
+
+This was my first time painting with acrylics, so the method is deliberately simple and forgiving:
+
+1. **Gray primer** — one base coat to hide the print layer lines and give the paint something to grip.
+2. **Metallic gray** — two coats, letting each dry fully, for the worn-machinery look.
+3. **Black wash** — a thinned black wash brushed over the surface and wiped back, so it settles into the recesses, panel lines and the embossed `C_CORP` lettering and makes the detail pop.
+
+Nothing fancy, but the primer + wash combo does most of the heavy lifting for a grimy industrial finish.
