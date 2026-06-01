@@ -168,6 +168,31 @@ curl -X POST http://192.168.1.42/api/color -H 'Content-Type: application/json' -
 
 ---
 
+## Firmware platform — ESP-IDF + Rust `std`
+
+This firmware targets **ESP-IDF** (Espressif's official SDK) through [`esp-idf-svc`](https://github.com/esp-rs/esp-idf-svc) / [`esp-idf-hal`](https://github.com/esp-rs/esp-idf-hal) — *not* a `no_std` bare-metal stack. ESP-IDF is built on **FreeRTOS**, so the binary runs on top of a real-time OS with a scheduler and heap, and Rust gets a full `std`.
+
+That single choice is why the code reads like ordinary networked Rust instead of embedded ceremony:
+
+- **Threads** — WiFi and the HTTP server run on their own `std::thread` with a custom stack size ([`src/wifi.rs`](src/wifi.rs)), while the main thread drives the 100 ms display/LED loop.
+- **Shared state** — UI state lives in an `Arc<Mutex<AppState>>` ([`src/state.rs`](src/state.rs)), locked by both the render loop and the REST handlers — no bespoke critical-section dance.
+- **Networking included** — WiFi (STA + DHCP hostname), the lwIP TCP/IP stack, and the `EspHttpServer` ([`src/server.rs`](src/server.rs)) all come from ESP-IDF.
+- **Timing** — the loop paces itself with `FreeRtos::delay_ms`, yielding to the scheduler instead of busy-waiting.
+
+**Trade-off vs bare-metal** (`esp-hal`, the pure-Rust `no_std` stack):
+
+| | ESP-IDF + `std` (this project) | `no_std` + `esp-hal` |
+|---|---|---|
+| WiFi + HTTP | batteries-included | DIY (smoltcp, embassy, …) |
+| Concurrency | `std` threads + `Mutex` | async (embassy) or manual |
+| Binary size / RAM | heavier (FreeRTOS + lwIP) | leaner |
+| Toolchain | needs the ESP-IDF C SDK | pure Rust |
+| Low-level control | less | full |
+
+For a networked prop whose whole job is *serve a web UI and animate a screen at the same time*, ESP-IDF was the fastest path to something solid: WiFi and an HTTP server are first-class instead of a sub-project of their own. The cost is a larger binary and a heavier toolchain — which is why the build needs the ESP-IDF C SDK and `~/export-esp.sh` (see [Build & Flash](#build--flash)).
+
+---
+
 ## Stack
 
 - **Rust** with `esp` toolchain (`xtensa-esp32-espidf` target)
