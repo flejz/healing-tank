@@ -15,6 +15,8 @@ ESP32 firmware for a cyberpunk biohealing tank prop. Drives a 128×64 SSD1306 OL
   </tr>
 </table>
 
+<p align="center"><sub>The "subject" suspended in stasis is a cheap AliExpress bootleg of the <a href="https://myfigurecollection.net/item/1131782">figma 549 <em>RONIN</em></a> from neco's <strong>FALSLANDER</strong> series (Max Factory) — exactly the right amount of uncanny.</sub></p>
+
 ---
 
 ## Inspiration
