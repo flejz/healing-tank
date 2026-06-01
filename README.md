@@ -15,8 +15,6 @@ ESP32 firmware for a cyberpunk biohealing tank prop. Drives a 128×64 SSD1306 OL
   </tr>
 </table>
 
-<p align="center"><sub>Full-resolution clips: <a href="media/">media/*.mp4</a></sub></p>
-
 ---
 
 ## Inspiration
@@ -86,6 +84,19 @@ Occasional glitch overlay flickers random scanlines and corrupts the ticker row 
 ## Wiring
 
 ![Wiring schematic](hardware/wiring-schematic.svg)
+
+### Prototyping & build
+
+Bread-boarded first, then soldered onto a protoboard and wired through the front panel into the printed base:
+
+<table>
+  <tr>
+    <td align="center"><img src="hardware/protoboard.gif" width="200" alt="Breadboard prototype"><br><sub>Breadboard prototype</sub></td>
+    <td align="center"><img src="hardware/wiring.jpeg" width="200" alt="Wiring the base"><br><sub>Wiring the base</sub></td>
+    <td align="center"><img src="hardware/wiring-panel-only.jpeg" width="200" alt="Front-panel harness"><br><sub>Front-panel harness</sub></td>
+    <td align="center"><img src="hardware/poor-soldering-job.jpeg" width="200" alt="Protoboard solder job"><br><sub>Protoboard (first solder job)</sub></td>
+  </tr>
+</table>
 
 ---
 
