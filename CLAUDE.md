@@ -70,4 +70,4 @@ Note on scale: Fusion 360 wasn't exporting the STLs at the correct size (likely 
 
 ## Notes
 
-`platformio.ini` is a leftover Arduino/PlatformIO config — ignore it, the project uses Cargo. No tests exist (embedded firmware, hardware-dependent).
+No tests exist (embedded firmware, hardware-dependent).
