@@ -62,6 +62,12 @@ O2:100%  TEMP:36.6C     ← static vitals
 
 Animation loop runs at 100ms ticks. Status messages defined in `STATUS_MSGS` constant array in `src/main.rs`.
 
+## 3D Models / Enclosure
+
+STL files for 3D printing the enclosure live in `models/`. They were designed in Fusion 360.
+
+Note on scale: Fusion 360 wasn't exporting the STLs at the correct size (likely the design was authored in cm but exported as mm), so the files were manually upscaled by 1000x to print at the intended dimensions.
+
 ## Notes
 
 `platformio.ini` is a leftover Arduino/PlatformIO config — ignore it, the project uses Cargo. No tests exist (embedded firmware, hardware-dependent).
