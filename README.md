@@ -2,6 +2,43 @@
 
 ESP32 firmware for a cyberpunk biohealing tank prop. Drives a 128×64 SSD1306 OLED display and a WS2812B LED strip, with a WiFi-hosted web UI for live control.
 
+<p align="center">
+  <img src="media/main-demo.jpeg" width="500" alt="BIO-TANK MK.VII — finished build">
+</p>
+
+<table align="center">
+  <tr>
+    <td align="center"><img src="media/red-breathing-demo.gif" width="170" alt="Breathing mode, red"><br><sub>Breathing · red</sub></td>
+    <td align="center"><img src="media/purple-static-demo.gif" width="170" alt="Solid mode, purple"><br><sub>Solid · purple</sub></td>
+    <td align="center"><img src="media/cyan-blinking-demo.gif" width="170" alt="Glitch mode, cyan"><br><sub>Glitch · cyan</sub></td>
+    <td align="center"><img src="media/front-panel-demo.gif" width="170" alt="Front panel and OLED"><br><sub>Front panel</sub></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Full-resolution clips: <a href="media/">media/*.mp4</a></sub></p>
+
+---
+
+## Inspiration
+
+This prop is inspired by the **Biohealing Tank Chamber** 3D art series by **Yavuz Yener** — a dark industrial sci-fi chamber where a subject floats in green healing liquid surrounded by C-Corp machinery and glowing terminals.
+
+[![Yavuz Yener – Biohealing Tank Chamber](reference/yavuz-yener-01.jpg)](https://www.youtube.com/watch?v=_1hYA1enYzo)
+
+> *"Biohealing Tank Chamber" — 3D art by Yavuz Yener*  
+> Video: [youtube.com/watch?v=_1hYA1enYzo](https://www.youtube.com/watch?v=_1hYA1enYzo)
+
+### Reference images
+
+| | | |
+|---|---|---|
+| ![](reference/yavuz-yener-01.jpg) | ![](reference/yavuz-yener-02.jpg) | ![](reference/yavuz-yener-03.jpg) |
+| ![](reference/yavuz-yener-04.jpg) | ![](reference/yavuz-yener-05.jpg) | ![](reference/yavuz-yener-06.jpg) |
+| ![](reference/yavuz-yener-07.jpg) | ![](reference/yavuz-yener-08.jpg) | ![](reference/yavuz-yener-09.jpg) |
+| ![](reference/yavuz-yener-10.jpg) | | |
+
+All 3D artwork © Yavuz Yener. Used here purely as visual reference for the prop build.
+
 ---
 
 ## What it looks like
@@ -22,6 +59,8 @@ ESP32 firmware for a cyberpunk biohealing tank prop. Drives a 128×64 SSD1306 OL
 Occasional glitch overlay flickers random scanlines and corrupts the ticker row with hex error messages — synced with the LED glitch mode.
 
 **Web UI** — served from the ESP32 at its IP (port 80):
+
+![Web UI](hardware/web-ui.png)
 
 - LED mode buttons: SOLID / BREATHING / GLITCH / RAINBOW / OFF
 - Brightness slider (0–255)
@@ -46,42 +85,18 @@ Occasional glitch overlay flickers random scanlines and corrupts the ticker row 
 
 ## Wiring
 
-```
-                    ESP32 DevKit
-                  ┌─────────────┐
-            3V3 ──┤ 3V3     VIN ├── 5V (USB)
-            GND ──┤ GND     GND ├── GND
-                  │             │
-          GPIO2 ──┤ IO2         │
-         GPIO21 ──┤ IO21        │
-         GPIO22 ──┤ IO22        │
-                  └─────────────┘
+![Wiring schematic](hardware/wiring-schematic.svg)
 
-  SSD1306 OLED (I2C, 400 kHz)
-  ┌──────────────┐
-  │ VCC ─────────┼──── 3V3
-  │ GND ─────────┼──── GND
-  │ SDA ─────────┼──── GPIO21
-  │ SCL ─────────┼──── GPIO22
-  └──────────────┘
-  Note: most modules have built-in pull-ups.
-  If not: 4.7 kΩ from SDA → 3V3 and SCL → 3V3.
+---
 
-  WS2812B Strip (22 LEDs, GRB, RMT)
+## Enclosure
 
-  5V ───────────────────┬──── VCC (strip)
-                      [100–1000 µF]   ← across power rails,
-                        │              close to strip
-  GND ──────────────────┴──── GND (strip)
+3D-printable parts designed in Fusion 360 live in [`models/`](models/) — see the [models README](models/README.md) for part breakdown and print notes.
 
-  GPIO2 ──[300–470 Ω]──────── DIN (strip)
-
-  Future – water pump (MOSFET, parts TBD)
-  5V ──── pump ──── MOSFET drain
-                    MOSFET source ──── GND
-                    MOSFET gate ── 330 Ω ── GPIO (free)
-                    1N4007 flyback diode across pump terminals
-```
+<p>
+  <img src="models/tank-base_front-panel.jpeg" width="240" alt="Tank base + front panel">
+  <img src="models/tank-top.jpeg" width="240" alt="Tank top">
+</p>
 
 ---
 
@@ -160,25 +175,3 @@ curl -X POST http://192.168.1.42/api/color -H 'Content-Type: application/json' -
 - [`ssd1306`](https://github.com/jamwaffles/ssd1306) — display driver
 - [`embedded-graphics`](https://github.com/embedded-graphics/embedded-graphics) — 2D drawing primitives
 - [`serde_json`](https://github.com/serde-rs/json) — JSON for REST API
-
----
-
-## Inspiration
-
-This prop is inspired by the **Biohealing Tank Chamber** 3D art series by **Yavuz Yener** — a dark industrial sci-fi chamber where a subject floats in green healing liquid surrounded by C-Corp machinery and glowing terminals.
-
-[![Yavuz Yener – Biohealing Tank Chamber](reference/yavuz-yener-01.jpg)](https://www.youtube.com/watch?v=_1hYA1enYzo)
-
-> *"Biohealing Tank Chamber" — 3D art by Yavuz Yener*  
-> Video: [youtube.com/watch?v=_1hYA1enYzo](https://www.youtube.com/watch?v=_1hYA1enYzo)
-
-### Reference images
-
-| | | |
-|---|---|---|
-| ![](reference/yavuz-yener-01.jpg) | ![](reference/yavuz-yener-02.jpg) | ![](reference/yavuz-yener-03.jpg) |
-| ![](reference/yavuz-yener-04.jpg) | ![](reference/yavuz-yener-05.jpg) | ![](reference/yavuz-yener-06.jpg) |
-| ![](reference/yavuz-yener-07.jpg) | ![](reference/yavuz-yener-08.jpg) | ![](reference/yavuz-yener-09.jpg) |
-| ![](reference/yavuz-yener-10.jpg) | | |
-
-All 3D artwork © Yavuz Yener. Used here purely as visual reference for the prop build.
